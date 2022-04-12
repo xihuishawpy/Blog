@@ -31,8 +31,7 @@ class KmeanppCluster():
             
         # Kmean ++ 基于距离概率选择k个中心点
         # 1.随机选择一个点
-        center = []
-        center.append(random.choice(range(len(self.data[0]))))
+        center = [random.choice(range(len(self.data[0])))]
         # 2.根据距离的概率选择其他中心点
         for i in range(self.k - 1):
             weights = [self.distance_closest(self.data[0][x], center) 
@@ -57,18 +56,15 @@ class KmeanppCluster():
     def distance_closest(self, x, center):
         min = 99999
         for centroid in center:
-            distance = 0
             cent = self.data_dict[self.data[0][centroid]]
-            for i in range(len(cent)):
-                distance += abs(self.data_dict[x][i] - cent[i])
+            distance = sum(abs(self.data_dict[x][i] - cent[i]) for i in range(len(cent)))
             if distance < min:
                 min = distance
         return min
     
     def get_median(self, alist):
         """get median of list"""
-        tmp = list(alist)
-        tmp.sort()
+        tmp = sorted(alist)
         alen = len(tmp)
         if (alen % 2) == 1:
             return tmp[alen // 2]
@@ -78,9 +74,8 @@ class KmeanppCluster():
     #标准化
     def standlize(self, column):
         median = self.get_median(column)
-        asd = sum([abs(x - median) for x in column]) / len(column)
-        result = [(x - median) / asd for x in column]
-        return result
+        asd = sum(abs(x - median) for x in column) / len(column)
+        return [(x - median) / asd for x in column]
     
     #加载数据并标准化
     def loaddata(self, filename):
@@ -88,18 +83,18 @@ class KmeanppCluster():
         with open(filename , "r") as fileobject:
             lines = fileobject.readlines()
         header = lines[0].split(",")
-        self.data = [[] for i in range(len(header))]
+        self.data = [[] for _ in range(len(header))]
         for line in lines[1:]:
             line = line.split(",")
             for i in range(len(header)):
                 if i == 0:
                     self.data[i].append(line[i])
                 else:
-                    self.data[i].append(float(line[i]))                    
+                    self.data[i].append(float(line[i]))
         for col in range(1, len(header)):
             self.data[col] = self.standlize(self.data[col])
-        #data_dict  data对应Key    
-        for i in range(0, len(self.data[0])):
+        #data_dict  data对应Key
+        for i in range(len(self.data[0])):
             for col in range(1, len(self.data)):
                 self.data_dict.setdefault(self.data[0][i], [])
                 self.data_dict[self.data[0][i]].append(self.data[col][i])
@@ -157,7 +152,10 @@ class KmeanppCluster():
             self.center_dict[k]["classify"].append(item_name)
         #print(class_dict)
         #print(self.center_dict)
-        self.new_center = [[0.0 for j in range(1, len(self.data))] for i in range(self.k)]
+        self.new_center = [
+            [0.0 for _ in range(1, len(self.data))] for _ in range(self.k)
+        ]
+
         for k in self.center_dict:
             for i in range(len(self.data)-1):
                 for cls_item in self.center_dict[k]["classify"]:

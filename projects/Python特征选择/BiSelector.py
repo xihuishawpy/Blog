@@ -18,14 +18,14 @@ def model_metrics(model, x, y, pos_label=1):
     yhat = model.predict(x)
     yprob = model.predict_proba(x)[:,1]
     fpr, tpr, _ = roc_curve(y, yprob, pos_label=pos_label)
-    result = {'accuracy_score':accuracy_score(y, yhat),
-              'f1_score_macro': f1_score(y, yhat, average = "macro"),
-              'precision':precision_score(y, yhat,average="macro"),
-              'recall':recall_score(y, yhat,average="macro"),
-              'auc':auc(fpr,tpr),
-              'ks': max(abs(tpr-fpr))
-             }
-    return result
+    return {
+        'accuracy_score': accuracy_score(y, yhat),
+        'f1_score_macro': f1_score(y, yhat, average="macro"),
+        'precision': precision_score(y, yhat, average="macro"),
+        'recall': recall_score(y, yhat, average="macro"),
+        'auc': auc(fpr, tpr),
+        'ks': max(abs(tpr - fpr)),
+    }
 
 def bidirectional_selection(model, x_train, y_train, x_test, y_test, annealing=True, anneal_rate=0.2, iters=10,best_metrics=0,
                          metrics='auc',threshold_in=0.0001, threshold_out=0.0001,early_stop=True, 
@@ -39,13 +39,13 @@ def bidirectional_selection(model, x_train, y_train, x_test, y_test, annealing=T
     """
     included = []
     best_metrics = best_metrics
-    
+
     for i in range(iters):
         # forward step     
         print("iters", i)
-        changed = False 
+        changed = False
         excluded = list(set(x_train.columns) - set(included))
-        random.shuffle(excluded) 
+        random.shuffle(excluded)
         for new_column in excluded:             
             model.fit(x_train[included+[new_column]], y_train)
             latest_metrics = model_metrics(model, x_test[included+[new_column]], y_test)[metrics]
@@ -60,7 +60,7 @@ def bidirectional_selection(model, x_train, y_train, x_test, y_test, annealing=T
                     included.append(new_column)
                     if verbose:
                         print ('Annealing Add   {} with metrics gain {:.6}'.format(new_column,latest_metrics-best_metrics))
-                    
+
         # backward step                      
         random.shuffle(included)
         for new_column in included:
@@ -70,12 +70,17 @@ def bidirectional_selection(model, x_train, y_train, x_test, y_test, annealing=T
             if latest_metrics - best_metrics <= threshold_out:
                 included.append(new_column)
             else:
-                changed = True 
-                best_metrics= latest_metrics 
+                changed = True
+                best_metrics= latest_metrics
                 if verbose:
-                    print('Drop{} with metrics gain {:.6}'.format(new_column,latest_metrics-best_metrics))
+                    print(
+                        'Drop{} with metrics gain {:.6}'.format(
+                            new_column, best_metrics - best_metrics
+                        )
+                    )
+
         if not changed and early_stop:
-            break 
+            break
     return included      
 
 #示例

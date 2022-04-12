@@ -36,15 +36,14 @@ test_set_x = test_set_x_flatten/255.
 
 #激活函数
 def sigmoid(z):
-    s = 1 / (1 + np.exp(-z))    
-    return s
+    return 1 / (1 + np.exp(-z))
     
 #初始化
 def initialize_with_zeros(dim):
     w = np.zeros((dim, 1))
     b = 0
     assert(w.shape == (dim, 1))
-    assert(isinstance(b, float) or isinstance(b, int))
+    assert isinstance(b, (float, int))
     return w, b
 
 # cost函数，计算梯度
@@ -83,18 +82,15 @@ def optimize(w, b, X, Y, num_iterations, learning_rate, print_cost):
 
 #传入优化的w，b   
 def predict(w, b, X):
-	m = X.shape[1]
-	Y_prediction = np.zeros((1,m))
-	w = w.reshape(X.shape[0], 1)
-	A = sigmoid(np.dot(w.T, X) + b)
-	for i in range(A.shape[1]):
-		if A[0, i] <= 0.5:
-			Y_prediction[0, i] = 0
-		else:
-			Y_prediction[0, i] = 1
-	assert(Y_prediction.shape == (1, m))
-    
-	return Y_prediction
+    m = X.shape[1]
+    Y_prediction = np.zeros((1,m))
+    w = w.reshape(X.shape[0], 1)
+    A = sigmoid(np.dot(w.T, X) + b)
+    for i in range(A.shape[1]):
+        Y_prediction[0, i] = 0 if A[0, i] <= 0.5 else 1
+    assert(Y_prediction.shape == (1, m))
+
+    return Y_prediction
 
 def model(X_train, Y_train, X_test, Y_test, num_iterations, learning_rate, print_cost):
     # initialize parameters with zeros (≈ 1 line of code)
@@ -108,16 +104,23 @@ def model(X_train, Y_train, X_test, Y_test, num_iterations, learning_rate, print
     Y_prediction_test = predict(w, b, X_test)
     Y_prediction_train = predict(w, b, X_train)
     # Print train/test Errors rate
-    print("train accuracy: {} %".format(100 - np.mean(np.abs(Y_prediction_train - Y_train)) * 100))
-    print("test accuracy: {} %".format(100 - np.mean(np.abs(Y_prediction_test - Y_test)) * 100))    
-    d = {"costs": costs,
-         "Y_prediction_test": Y_prediction_test, 
-         "Y_prediction_train" : Y_prediction_train, 
-         "w" : w, 
-         "b" : b,
-         "learning_rate" : learning_rate,
-         "num_iterations": num_iterations}    
-    return d
+    print(
+        f"train accuracy: {100 - np.mean(np.abs(Y_prediction_train - Y_train)) * 100} %"
+    )
+
+    print(
+        f"test accuracy: {100 - np.mean(np.abs(Y_prediction_test - Y_test)) * 100} %"
+    )
+
+    return {
+        "costs": costs,
+        "Y_prediction_test": Y_prediction_test,
+        "Y_prediction_train": Y_prediction_train,
+        "w": w,
+        "b": b,
+        "learning_rate": learning_rate,
+        "num_iterations": num_iterations,
+    }
 #训练模型
 d = model(train_set_x, train_set_y, test_set_x, test_set_y, num_iterations = 1000, learning_rate = 0.003, print_cost = False)
 
@@ -125,7 +128,7 @@ d = model(train_set_x, train_set_y, test_set_x, test_set_y, num_iterations = 100
 learning_rates = [0.003, 0.001, 0.0001]
 models = {}
 for i in learning_rates:
-    print ("learning rate is: " + str(i))
+    print(f"learning rate is: {str(i)}")
     models[str(i)] = model(train_set_x, train_set_y, test_set_x, test_set_y, num_iterations = 1500, learning_rate = i, print_cost = True)
     print ('\n' + "-------------------------------------------------------" + '\n')
 #提取cost和rate

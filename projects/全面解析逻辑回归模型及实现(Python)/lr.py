@@ -9,23 +9,22 @@ from sklearn import datasets
 
 # 加载数据并简单划分为训练集/测试集
 def load_dataset():
-    dataset = datasets.load_breast_cancer()  
-    train_x,train_y = dataset['data'][0:400], dataset['target'][0:400]
+    dataset = datasets.load_breast_cancer()
+    train_x,train_y = dataset['data'][:400], dataset['target'][:400]
     test_x, test_y = dataset['data'][400:-1], dataset['target'][400:-1]
     return train_x, train_y, test_x, test_y
 
 
 # logit激活函数
 def sigmoid(z):
-    s = 1 / (1 + np.exp(-z))    
-    return s
+    return 1 / (1 + np.exp(-z))
     
 # 权重初始化0
 def initialize_with_zeros(dim):
     w = np.zeros((dim, 1))
     b = 0
     assert(w.shape == (dim, 1))
-    assert(isinstance(b, float) or isinstance(b, int))
+    assert isinstance(b, (float, int))
     return w, b
 
 # 定义学习的目标函数，计算梯度
@@ -68,21 +67,18 @@ def optimize(w, b, X, Y, num_iterations, learning_rate, print_cost):
 
 #传入优化后的模型参数w，b，模型预测   
 def predict(w, b, X):
-	m = X.shape[1]
-	Y_prediction = np.zeros((1,m))
-	A = sigmoid(np.dot(w.T, X) + b)
-	for i in range(A.shape[1]):
-		if A[0, i] <= 0.5:
-			Y_prediction[0, i] = 0
-		else:
-			Y_prediction[0, i] = 1
-	assert(Y_prediction.shape == (1, m))
-    
-	return Y_prediction
+    m = X.shape[1]
+    Y_prediction = np.zeros((1,m))
+    A = sigmoid(np.dot(w.T, X) + b)
+    for i in range(A.shape[1]):
+        Y_prediction[0, i] = 0 if A[0, i] <= 0.5 else 1
+    assert(Y_prediction.shape == (1, m))
+
+    return Y_prediction
 
 def model(X_train, Y_train, X_test, Y_test, num_iterations, learning_rate, print_cost):
     # 初始化
-    w, b = initialize_with_zeros(X_train.shape[0]) 
+    w, b = initialize_with_zeros(X_train.shape[0])
     # 梯度下降优化模型参数
     parameters, grads, costs = optimize(w, b, X_train, Y_train, num_iterations, learning_rate, print_cost)
     w = parameters["w"]
@@ -91,16 +87,23 @@ def model(X_train, Y_train, X_test, Y_test, num_iterations, learning_rate, print
     Y_prediction_test = predict(w, b, X_test)
     Y_prediction_train = predict(w, b, X_train)
     # 模型评估准确率
-    print("train accuracy: {} %".format(100 - np.mean(np.abs(Y_prediction_train - Y_train)) * 100))
-    print("test accuracy: {} %".format(100 - np.mean(np.abs(Y_prediction_test - Y_test)) * 100))    
-    d = {"costs": costs,
-         "Y_prediction_test": Y_prediction_test, 
-         "Y_prediction_train" : Y_prediction_train, 
-         "w" : w, 
-         "b" : b,
-         "learning_rate" : learning_rate,
-         "num_iterations": num_iterations}    
-    return d
+    print(
+        f"train accuracy: {100 - np.mean(np.abs(Y_prediction_train - Y_train)) * 100} %"
+    )
+
+    print(
+        f"test accuracy: {100 - np.mean(np.abs(Y_prediction_test - Y_test)) * 100} %"
+    )
+
+    return {
+        "costs": costs,
+        "Y_prediction_test": Y_prediction_test,
+        "Y_prediction_train": Y_prediction_train,
+        "w": w,
+        "b": b,
+        "learning_rate": learning_rate,
+        "num_iterations": num_iterations,
+    }
     
     
     

@@ -48,7 +48,7 @@ class Recommendor():
             if user != username:
                 r = self.pearson(data[username], data[user])
                 remd_list.append((r, user,data[user]))
-        remd_list = sorted(remd_list, key=lambda x:x[0], reverse=True)[0:knn]
+        remd_list = sorted(remd_list, key=lambda x:x[0], reverse=True)[:knn]
         #k最近邻算法
         recommend_movie = {}
         remd_sum = 0.0
@@ -79,23 +79,21 @@ class Recommendor():
         n = 0
         r = 0
         for fav_key in user_x:
-            if fav_key in user_y:
-                if user_x[fav_key] != "" and user_y[fav_key] != "":
-                    x_sum += int(user_x[fav_key])
-                    y_sum += int(user_y[fav_key])
-                    xy_sum += int(user_x[fav_key]) * int(user_y[fav_key])
-                    x2_sum += pow(int(user_x[fav_key]), 2)
-                    y2_sum += pow(int(user_y[fav_key]), 2)
-                    n += 1
+            if (
+                fav_key in user_y
+                and user_x[fav_key] != ""
+                and user_y[fav_key] != ""
+            ):
+                x_sum += int(user_x[fav_key])
+                y_sum += int(user_y[fav_key])
+                xy_sum += int(user_x[fav_key]) * int(user_y[fav_key])
+                x2_sum += pow(int(user_x[fav_key]), 2)
+                y2_sum += pow(int(user_y[fav_key]), 2)
+                n += 1
         if n == 0:
             return 0
-        else:
-            fenmu = (sqrt(x2_sum - pow(x_sum, 2) / n) * sqrt(y2_sum - pow(y_sum, 2) / n))
-            if fenmu == 0:
-                return 0
-            else:
-                r = (xy_sum - x_sum * y_sum / n) / fenmu
-                return r
+        fenmu = (sqrt(x2_sum - pow(x_sum, 2) / n) * sqrt(y2_sum - pow(y_sum, 2) / n))
+        return 0 if fenmu == 0 else (xy_sum - x_sum * y_sum / n) / fenmu
     
     #余弦相关系数      
     def cosxy(self, user_x, user_y):
@@ -109,18 +107,11 @@ class Recommendor():
                 x2_sum += pow(user_x[fav_key], 2)
                 y2_sum += pow(user_y[fav_key], 2)
         fenmu = sqrt(x2_sum) * sqrt(y2_sum)
-        if fenmu != 0:
-            return (fenzi / fenmu)
-        else :
-            return 0
+        return (fenzi / fenmu) if fenmu != 0 else 0
         
     #曼哈顿距离   
     def manhaton(self, user1, user2):
-        distance = 0
-        for key in user1:
-            if key in user2:
-                distance += abs(user1[key] - user2[key])
-        return distance
+        return sum(abs(user1[key] - user2[key]) for key in user1 if key in user2)
             
     def compute_deviation(self):
         for ratings in self.data.values():
@@ -152,8 +143,8 @@ class Recommendor():
                     fenmu[diffitem] += freq
         recommendations = [(k, v/fenmu[k]) for (k,v) in recommendations.items()]
         recommendations.sort(key=lambda x:x[1],reverse=True)
-        print(recommendations[0:3])
-        return recommendations[0:3]
+        print(recommendations[:3])
+        return recommendations[:3]
     
     
     def cos_aver(self, item_a, item_b):
@@ -180,12 +171,10 @@ class Recommendor():
     #aver_dict = {}
         users3 = self.data
         s_list = []
-        for item_a in users3[user_a] :
+        for item_a in users3[user_a]:
             for item_b in self.movie_id.values():
                 if item_b != item_a and item_b not in users3[user_a]:
-                # print((item_a, item_b))
-                    s = self.cos_aver(item_a, item_b)
-                    if s :
+                    if s := self.cos_aver(item_a, item_b):
                         s_list.append((item_a, item_b, s))
         s_list.sort(key=lambda x:x[2],reverse=True)
         print(s_list)

@@ -60,8 +60,8 @@ batch_size = 32
 input_layer = Input(shape=(input_dim, ))
 encoder = Dense(encoding_dim, activation="tanh", 
                 activity_regularizer=regularizers.l1(10e-5))(input_layer)
-encoder = Dense(int(encoding_dim / 2), activation="relu")(encoder)
-decoder = Dense(int(encoding_dim / 2), activation='tanh')(encoder)
+encoder = Dense(encoding_dim // 2, activation="relu")(encoder)
+decoder = Dense(encoding_dim // 2, activation='tanh')(encoder)
 decoder = Dense(input_dim, activation='relu')(decoder)
 autoencoder = Model(inputs=input_layer, outputs=decoder)
 autoencoder.compile(optimizer='adam', 
@@ -87,14 +87,16 @@ plt.subplot(121)
 plt.plot(history['loss'], c='dodgerblue', lw=3)
 plt.plot(history['val_loss'], c='coral', lw=3)
 plt.title('model loss')
-plt.ylabel('mse'); plt.xlabel('epoch')
+plt.ylabel('mse')
+plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper right')
 
 plt.subplot(122)
 plt.plot(history['mae'], c='dodgerblue', lw=3)
 plt.plot(history['val_mae'], c='coral', lw=3)
 plt.title('model mae')
-plt.ylabel('mae'); plt.xlabel('epoch')
+plt.ylabel('mae')
+plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper right')
 
 
@@ -141,7 +143,8 @@ for flag in [1, 0]:
                 c=colors[flag], 
                 label=labels[flag])
 plt.title('Reconstruction MAE')
-plt.ylabel('Reconstruction MAE'); plt.xlabel('Index')
+plt.ylabel('Reconstruction MAE')
+plt.xlabel('Index')
 plt.subplot(122)
 for flag in [1, 0]:
     temp = mse_df[mse_df['Class'] == flag]
@@ -151,8 +154,10 @@ for flag in [1, 0]:
                 marker=markers[flag], 
                 c=colors[flag], 
                 label=labels[flag])
-plt.legend(loc=[1, 0], fontsize=12); plt.title('Reconstruction MSE')
-plt.ylabel('Reconstruction MSE'); plt.xlabel('Index')
+plt.legend(loc=[1, 0], fontsize=12)
+plt.title('Reconstruction MSE')
+plt.ylabel('Reconstruction MSE')
+plt.xlabel('Index')
 plt.show()
 # 下图分别是MAE和MSE重构误差，其中橘黄色的点是信用欺诈，也就是异常点；蓝色是正常点。我们可以看出异常点的重构误差整体很高。
 
@@ -203,7 +208,8 @@ for flag in [1, 0]:
                 c=colors[flag], 
                 label=labels[flag])
 plt.legend(loc=[1, 0])
-plt.ylabel('Reconstruction RMSE'); plt.xlabel('Reconstruction MAE')
+plt.ylabel('Reconstruction RMSE')
+plt.xlabel('Reconstruction MAE')
 plt.show()
 
 

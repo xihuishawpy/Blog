@@ -47,17 +47,9 @@ def transformInterval(bingroup):
     
     def f(bingroup, left_side,right_side,closed):
         left =bingroup[bingroup.find(left_side)+1:bingroup.find(right_side)].split(',')[0]
-        if left=='-∞':
-            left = -np.inf
-        else:
-            left = float(left)
-            
+        left = -np.inf if left=='-∞' else float(left)
         right=bingroup[bingroup.find(left_side)+1:bingroup.find(right_side)].split(',')[1]
-        if right=='+∞':
-            right = np.inf
-        else:
-            right = float(right)
-        
+        right = np.inf if right=='+∞' else float(right)
         if 'or' not in bingroup: #格式1 正常值--返回pd.Interval
             return pd.Interval(left,right,closed)
         else: # 格式2 正常值（区间）+异常值(集合) --返回list[pd.Interval,set]
@@ -93,12 +85,10 @@ def varChi2bin_char(df, gbflag, abnor, char_var_names):
     rs = pd.DataFrame()
     t = len(char_var_names)//10
     if t ==0:t=1
-    i=0
-    for char_var_name in char_var_names:
+    for i, char_var_name in enumerate(char_var_names, start=1):
         if df[char_var_name].unique().size<=150:
             char_bin = CharVarChi2Bin(df, char_var_name, gbflag, abnor, BinMax=12)
             rs = rs.append(char_bin)
-        i+=1
         if i%t==0:
             print("* ",end="")
     print("")
@@ -147,15 +137,19 @@ def initBin(df,varname,gbflag,sort='bad_percent'):
     init_bin.columns = ['total_counts','bad_counts']
     init_bin.insert(1,'good_counts',init_bin.total_counts-init_bin.bad_counts)
     init_bin['bad_percent'] = init_bin.bad_counts/init_bin.total_counts
-    
+
     if sort=='bad_percent':
         init_bin.sort_values('bad_percent', inplace=True) # 离散数据初始化分箱，按照坏样本占比排序
     else:# 年龄型数据初始化分箱
         init_bin.sort_index(inplace=True) # 按照数值大小排序
         var_list = list(init_bin.index.insert(0,'-∞'))
         var_list[-1] = '+∞'
-        init_bin.index = ['({},{})'.format(var_list[i],var_list[i+1]) for i in range(len(var_list)-1)]
-        
+        init_bin.index = [
+            f'({var_list[i]},{var_list[i+1]})'
+            for i in range(len(var_list) - 1)
+        ]
+
+
     init_bin.drop(columns=['bad_percent'],inplace=True)
     return init_bin
 
@@ -175,12 +169,12 @@ def matchBin(df,BinMax,BinPcntMin):
                 minChi2=chi2
                 minIndex=i
         df = mergeBin(df, minIndex, minIndex+1)
-        
+
         # 检查每个分组是否包同时含好样本和坏样本
         while len(df)>1 and len(df[(df['good_counts']==0) | (df['bad_counts']==0)])!=0:
             #若存在只包含好样本/坏样本的分组，且分组>1
             to_bin = df[(df['good_counts']==0)|(df['bad_counts']==0)].head(1)
-            
+
             for i in range(len(df.index.tolist())):
                 if to_bin.index[0] == df.index.tolist()[i]:
                     if i == 0:#第一个分组需要合并
@@ -195,29 +189,23 @@ def matchBin(df,BinMax,BinPcntMin):
                         if chi2_f<=chi2_b:#与前一个分组的卡方值更小
                             df = mergeBin(df, i-1, i)
                             break
-                            
-                            
+
+
         # 检查每个分组的样本占比是否>=BinPcntMin
         while len(df)>1 and len(df[df.total_counts/df.total_counts.sum()<BinPcntMin])!=0:
             to_bin = df[df.total_counts/df.total_counts.sum()<BinPcntMin].head(1)
-            
+
             for i in range(len(df.index.tolist())):
                 if to_bin.index[0] == df.index.tolist()[i]:
                     if i == 0:#第一个分组需要合并
                         df = mergeBin(df, i , i+1)
-                        break
                     elif i ==len(df.index.tolist())-1:#最后一个分组需要合并
                         df = mergeBin(df, i-1, i)
-                        break
                     else:#中间分组需要合并
                         chi2_f = calcChi2(df.iloc[i-1:i+1])
                         chi2_b = calcChi2(df.iloc[i:i+2])
-                        if chi2_f<chi2_b:#与前一个分组的卡方值更小
-                            df = mergeBin(df, i-1, i)
-                            break
-                        else:#与后一个分组的卡方值更小
-                            df = mergeBin(df, i, i+1)
-                            break
+                        df = mergeBin(df, i-1, i) if chi2_f<chi2_b else mergeBin(df, i, i+1)
+                    break
     return df
 
 
@@ -232,11 +220,9 @@ def varChi2Bin_num(df, gbflag, abnor, num_var_names):
     rs = pd.DataFrame()
     t = len(num_var_names)//10
     if t==0:t=1
-    i=0
-    for num_var_name in num_var_names:
+    for i, num_var_name in enumerate(num_var_names, start=1):
         num_bins = NumVarChi2Bin(df,num_var_name, gbflag, abnor, BinMax=12)
         rs = rs.append(num_bins)
-        i+=1
         if i%t==0:
             print("*",end="")
     print("")
@@ -262,20 +248,28 @@ def NumVarChi2Bin(df,varname,gbflag,abnor=[],InitGroup=100,BinMax=10,BinPcntMin=
     merge_bin = matchBin(merge_bin,BinMax,BinPcntMin) #正常样本合并分箱，知道满足条件
     if check:
         merge_bin = check_bad_ratio_order(merge_bin,varname)
-    merge_bin.insert(0,'bingroup',['({},{})'.format(i.split(',')[0].split('(')[1], i.split(',')[-1].split(']')[0]) for i in merge_bin.index])
+    merge_bin.insert(
+        0,
+        'bingroup',
+        [
+            f"({i.split(',')[0].split('(')[1]},{i.split(',')[-1].split(']')[0]})"
+            for i in merge_bin.index
+        ],
+    )
+
     merge_bin.reset_index(drop=True, inplace=True)
-    
+
     # 特殊值样本
     df_abnor = df[df[varname].isin(abnor)]
     result_abnor = initBin(df_abnor,varname,gbflag) #特殊值样本分箱
     result_abnor.reset_index(inplace=True)
     result_abnor.rename(columns={'index':'bingroup',varname:'bingroup'}, inplace=True)
-    
+
     # 合并
     result = pd.concat([merge_bin,result_abnor],axis=0)
     result.reset_index(drop=True,inplace=True)
     result.insert(0,'varname',varname)
-    
+
     result = idNumBin(result)
     return result
     
@@ -296,12 +290,21 @@ def initNumBin(df,varname,gbflag,InitGroup):
     init_bin.columns=['total_counts','bad_counts']
     init_bin.insert(1,'good_counts',init_bin.total_counts-init_bin.bad_counts)
     init_bin.index=init_bin.index.astype(str)
-    
+
     # 区间处理(前后为∞)
-    init_bin.rename(index={
-        init_bin.index[0]:'(-∞,{}]'.format(init_bin.index[0].split(',')[-1].split(']')[0]),
-        init_bin.index[-1]:'({},+∞]'.format(init_bin.index[-1].split(',')[0].split('(')[1])},inplace=True)
-    
+    init_bin.rename(
+        index={
+            init_bin.index[
+                0
+            ]: f"(-∞,{init_bin.index[0].split(',')[-1].split(']')[0]}]",
+            init_bin.index[
+                -1
+            ]: f"({init_bin.index[-1].split(',')[0].split('(')[1]},+∞]",
+        },
+        inplace=True,
+    )
+
+
     return init_bin
 
 def charVarBinCount(df_bin,dataSet,gbflag,varname='varname',bingroups='bingroups'):

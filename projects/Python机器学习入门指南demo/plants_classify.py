@@ -55,12 +55,12 @@ def model_metrics(model, x, y, pos_label=2):
     评估函数
     """
     yhat = model.predict(x)
-    result = {'accuracy_score':accuracy_score(y, yhat),
-              'f1_score_macro': f1_score(y, yhat, average = "macro"),
-              'precision':precision_score(y, yhat,average="macro"),
-              'recall':recall_score(y, yhat,average="macro")
-             }
-    return result
+    return {
+        'accuracy_score': accuracy_score(y, yhat),
+        'f1_score_macro': f1_score(y, yhat, average="macro"),
+        'precision': precision_score(y, yhat, average="macro"),
+        'recall': recall_score(y, yhat, average="macro"),
+    }
 
 
 # 模型评估结果

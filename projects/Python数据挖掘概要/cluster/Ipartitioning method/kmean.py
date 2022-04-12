@@ -4,8 +4,7 @@ import random
 
 def getMedian(alist):
     """get median of list"""
-    tmp = list(alist)
-    tmp.sort()
+    tmp = sorted(alist)
     alen = len(tmp)
     if (alen % 2) == 1:
         return tmp[alen // 2]
@@ -17,9 +16,8 @@ def normalizeColumn(column):
     """normalize the values of a column using Modified Standard Score
     that is (each value - median) / (absolute standard deviation)"""
     median = getMedian(column)
-    asd = sum([abs(x - median) for x in column]) / len(column)
-    result = [(x - median) / asd for x in column]
-    return result
+    asd = sum(abs(x - median) for x in column) / len(column)
+    return [(x - median) / asd for x in column]
 
 
 class kClusterer:
@@ -33,24 +31,23 @@ class kClusterer:
            4. randomly selects the initial centroids
            5. assigns points to clusters associated with those centroids
         """
-        file = open(filename)
-        self.data = {}
-        self.k = k
-        self.counter = 0
-        self.iterationNumber = 0
-        # used to keep track of % of points that change cluster membership
-        # in an iteration
-        self.pointsChanged = 0
-        # Sum of Squared Error
-        self.sse = 0
-        #
-        # read data from file
-        #
-        lines = file.readlines()
-        file.close()
+        with open(filename) as file:
+            self.data = {}
+            self.k = k
+            self.counter = 0
+            self.iterationNumber = 0
+            # used to keep track of % of points that change cluster membership
+            # in an iteration
+            self.pointsChanged = 0
+            # Sum of Squared Error
+            self.sse = 0
+            #
+            # read data from file
+            #
+            lines = file.readlines()
         header = lines[0].split(',')
         self.cols = len(header)
-        self.data = [[] for i in range(len(header))]
+        self.data = [[] for _ in range(len(header))]
         # we are storing the data by column.
         # For example, self.data[0] is the data from column 0.
         # self.data[0][10] is the column 0 value of item 10.
@@ -63,9 +60,9 @@ class kClusterer:
                     toggle = 1
                 else:
                     self.data[cell].append(float(cells[cell]))
-                    
+
         self.datasize = len(self.data[1])
-        self.memberOf = [-1 for x in range(len(self.data[1]))]
+        self.memberOf = [-1 for _ in range(len(self.data[1]))]
         #
         # now normalize number columns
         #
@@ -85,11 +82,20 @@ class kClusterer:
         """Using the points in the clusters, determine the centroid
         (mean point) of each cluster"""
         members = [self.memberOf.count(i) for i in range(len(self.centroids))]
-        self.centroids = [[sum([self.data[k][i]
-                                for i in range(len(self.data[0]))
-                                if self.memberOf[i] == centroid])/members[centroid]
-                           for k in range(1, len(self.data))]
-                          for centroid in range(len(self.centroids))] 
+        self.centroids = [
+            [
+                (
+                    sum(
+                        self.data[k][i]
+                        for i in range(len(self.data[0]))
+                        if self.memberOf[i] == centroid
+                    )
+                    / members[centroid]
+                )
+                for k in range(1, len(self.data))
+            ]
+            for centroid in range(len(self.centroids))
+        ] 
             
         
     
@@ -120,9 +126,11 @@ class kClusterer:
         
     def euclideanDistance(self, i, j):
         """ compute distance of point i from centroid j"""
-        sumSquares = 0
-        for k in range(1, self.cols):
-            sumSquares += (self.data[k][i] - self.centroids[j][k-1])**2
+        sumSquares = sum(
+            (self.data[k][i] - self.centroids[j][k - 1]) ** 2
+            for k in range(1, self.cols)
+        )
+
         return math.sqrt(sumSquares)
 
     def kCluster(self):

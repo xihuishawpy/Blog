@@ -62,5 +62,5 @@ from pyspark.ml.evaluation import BinaryClassificationEvaluator
 
 predictions = lr_model.transform(test)
 auc = BinaryClassificationEvaluator().setLabelCol('Survived')
-print('AUC of the model:' + str(auc.evaluate(predictions)))
+print(f'AUC of the model:{str(auc.evaluate(predictions))}')
 print('features weights', lr_model.coefficientMatrix)

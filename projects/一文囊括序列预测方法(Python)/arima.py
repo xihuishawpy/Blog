@@ -6,6 +6,7 @@ ARIMA: 差分自回归移动平均模型
 """
 
 
+
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -132,7 +133,7 @@ predict_series = predict_data.values + dau.values[1:-1]
 # comp = pd.DataFrame()
 # comp['original'] = original_series
 # comp['predict'] = predict_series
-split_num = int(len(dau.values)/3) or 1
+split_num = len(dau.values) // 3 or 1
 rmse = sqrt(mean_squared_error(original_series[-split_num:], predict_series[-split_num:]))
 print('Test RMSE: %.3f' % rmse)
 # (0,1,0)Test RMSE

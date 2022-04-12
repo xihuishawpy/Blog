@@ -64,11 +64,7 @@ class Bayes_unstructure():
         #训练组的条件概率
         for word in self.vocabulary:
             for category,value in self.prob.items():
-                if word not in self.prob[category]:
-                    #count初始值由1优化0 准确率提高1.39%，0优化为-0.999准确率:-0.4%,-0.9:+0.2%
-                    count = 0
-                else :
-                    count = self.prob[category][word]
+                count = 0 if word not in self.prob[category] else self.prob[category][word]
                 #优化的条件概率 83.5%
                 self.prob[category][word] = (count + 1) / (self.total[category] + len(self.vocabulary)) 
                 

@@ -21,9 +21,9 @@ class Clsssify():
     #中位数
     def median(self, alist):
         if len(alist) % 2 == 1:
-            return alist[int(len(alist) / 2)]
+            return alist[len(alist) // 2]
         else:
-            return (alist[int(len(alist) / 2)] + alist[int(len(alist) / 2) - 1]) / 2.0
+            return (alist[len(alist) // 2] + alist[len(alist) // 2 - 1]) / 2.0
         
     #绝对偏差
     def asd(self, alist, median):
@@ -38,13 +38,11 @@ class Clsssify():
         for i in range(4):
             col_list = [alist[i] for alist in data]
             alist = sorted(col_list)
-            median_list.append(self.median(alist)) 
+            median_list.append(self.median(alist))
             asd_list.append(self.asd(alist, median_list[i]))
-            j = 0
-            for line in st_list:
+            for j, line in enumerate(st_list):
                 st_list[j][i] = ((line[i] - median_list[i]) / asd_list[i])
-                j += 1
-            #st_list.append((np.array(col_list) - median_list[i]) / asd_list[i])
+                #st_list.append((np.array(col_list) - median_list[i]) / asd_list[i])
         return st_list
     
     #max-min标准化，准确率83%
@@ -57,16 +55,13 @@ class Clsssify():
             alist = sorted(col_list)
             min_list.append(alist[0])
             max_list.append(alist[-1])
-            j = 0
-            for line in st_list:
+            for j, line in enumerate(st_list):
                 st_list[j][i] = ((line[i] - min_list[i]) / (max_list[i] - min_list[i]))
-                j += 1
         return st_list
             
     
     def manhanton(self,v1,v2):
-        r = np.sum(abs(v2 - v1))
-        return r
+        return np.sum(abs(v2 - v1))
     
     #manhton距离计算特征值距离
     def recommentor_manh(self):
@@ -76,9 +71,9 @@ class Clsssify():
         test_list = []
         manh_list = []
         for test in st_test:
-            v1 = np.array(test[0:4])
+            v1 = np.array(test[:4])
             for train in st_train:
-                v2 = np.array(train[0:4])
+                v2 = np.array(train[:4])
                 r = self.manhanton(v1, v2)
                 manh_list.append((r, train[4]))
             rel_class = min(manh_list)[1]
@@ -86,15 +81,14 @@ class Clsssify():
             #test_list.append((test,rel_class))
             if rel_class == test[4]:
                 right += 1
-        acurrency = (right / len(st_test)) * 100
-        return acurrency
+        return (right / len(st_test)) * 100
     
     # KNN算法
     def knn(self, oj_list):
         weight_dict = {"Iris-setosa":0.0, "Iris-versicolor":0.0, "Iris-virginica":0.0}
         for atuple in oj_list:
             weight_dict[atuple[1]] += (1.0 / atuple[0])
-        rel_class = [(key, value) for key, value in weight_dict.items()]
+        rel_class = list(weight_dict.items())
         #print(sorted(rel_class, key=lambda x:x[1], reverse=True))
         rel_class = sorted(rel_class, key=lambda x:x[1], reverse=True)[0][0]
         return rel_class
@@ -113,21 +107,20 @@ class Clsssify():
         right = 0
         oj_list = []
         for test in st_test:
-            v1 = test[0:4]
+            v1 = test[:4]
             for train in st_train:
-                v2 = train[0:4]
+                v2 = train[:4]
                 r = self.oj(v1, v2)
                 oj_list.append((r, train[4]))
             #print (min(oj_list),test[4])
-            oj_list = sorted(oj_list, key=lambda x:x[0])[0:k]
+            oj_list = sorted(oj_list, key=lambda x:x[0])[:k]
             rel_class = self.knn(oj_list)
             #print("test",test[4])
             if rel_class == test[4]:
                 right += 1
             oj_list =[]
-            #每个test的数据清空
-        acurrency = (right / len(st_test)) * 100
-        return acurrency
+                #每个test的数据清空
+        return (right / len(st_test)) * 100
     
     #留一法测试：准确93.3%
     def leaveone_test(self):

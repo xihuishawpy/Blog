@@ -35,7 +35,7 @@ def timeseries_to_supervised(data, lag=1):
 
 # diff series
 def difference(dataset, interval=1):
-    diff = list()
+    diff = []
     for i in range(interval, len(dataset)):
         value = dataset[i] - dataset[i - interval]
         diff.append(value)
@@ -61,11 +61,11 @@ def scale(train, test):
 
 # invert scale transform
 def invert_scale(scaler, X, value):
-  new_row = [x for x in X] + [value]
-  array = np.array(new_row)
-  array = array.reshape(1, len(array))
-  inverted = scaler.inverse_transform(array)
-  return inverted[0, -1]
+    new_row = list(X) + [value]
+    array = np.array(new_row)
+    array = array.reshape(1, len(array))
+    inverted = scaler.inverse_transform(array)
+    return inverted[0, -1]
 
 # model train
 def fit_xgb(train):
@@ -103,8 +103,8 @@ print(supervised.head())
 supervised_values = supervised.values
 
 # 训练集测试集
-split_num = int(len(supervised_values)/3) or 1
-train, test = supervised_values[0:-split_num], supervised_values[-split_num:]
+split_num = len(supervised_values) // 3 or 1
+train, test = supervised_values[:-split_num], supervised_values[-split_num:]
 
 # 标准化
 scaler, train_scaled, test_scaled = scale(train, test)
@@ -135,7 +135,7 @@ xgb_model = joblib.load("./data/xgb_model")
 
 # yhat = inverted[:,-1]
 # validation
-predictions = list()
+predictions = []
 for i in range(len(test_scaled)):
   # make one-step forecast
   X, y = test_scaled[i, 0:-1], test_scaled[i, -1]

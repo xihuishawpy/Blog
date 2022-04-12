@@ -19,16 +19,16 @@ def parser(x):
 
 #supervised
 def timeseries_to_supervised(data, lag=1):
-  df = DataFrame(data)
-  columns = [df.shift(1) for i in range(1, lag+1)]
-  columns.append(df)
-  df = concat(columns, axis=1)
-  df.fillna(0, inplace=True)
-  return df
+    df = DataFrame(data)
+    columns = [df.shift(1) for _ in range(1, lag+1)]
+    columns.append(df)
+    df = concat(columns, axis=1)
+    df.fillna(0, inplace=True)
+    return df
 
 # diff series
 def difference(dataset, interval=1):
-    diff = list()
+    diff = []
     for i in range(interval, len(dataset)):
         value = dataset[i] - dataset[i - interval]
         diff.append(value)
@@ -54,11 +54,11 @@ def scale(train, test):
 
 # invert scale transform
 def invert_scale(scaler, X, value):
-  new_row = [x for x in X] + [value]
-  array = np.array(new_row)
-  array = array.reshape(1, len(array))
-  inverted = scaler.inverse_transform(array)
-  return inverted[0, -1]
+    new_row = list(X) + [value]
+    array = np.array(new_row)
+    array = array.reshape(1, len(array))
+    inverted = scaler.inverse_transform(array)
+    return inverted[0, -1]
 
 # model train
 def fit_lstm(train, batch_size, nb_epoch, neurons):
@@ -136,8 +136,8 @@ print(supervised.head())
 supervised_values = supervised.values
 
 # split data
-split_num = int(len(supervised_values)/3) or 1
-train, test = supervised_values[0:-split_num], supervised_values[-split_num:]
+split_num = len(supervised_values) // 3 or 1
+train, test = supervised_values[:-split_num], supervised_values[-split_num:]
 
 # 标准化
 scaler, train_scaled, test_scaled = scale(train, test)
@@ -170,7 +170,7 @@ train_raw = train_scaled[:, 0]
 # plt.plot(predictions, label="predict")
 # plt.legend()
 # plt.show()
-  
+
 
 # 保存模型
 lstm_model.save('./data/lstm_model_epoch50.h5')
@@ -179,7 +179,7 @@ lstm_model.save('./data/lstm_model_epoch50.h5')
 lstm_model = load_model('./data/lstm_model_epoch50.h5')
 
 # validation
-predictions = list()
+predictions = []
 for i in range(len(test_scaled)):
   # make one-step forecast
   X, y = test_scaled[i, 0:-1], test_scaled[i, -1]
